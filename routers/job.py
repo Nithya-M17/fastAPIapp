@@ -1,37 +1,63 @@
-from fastapi import APIRouter
-from schemas.job import JobCreate,JobUpdate
+from fastapi import APIRouter, HTTPException, status
+from schemas.job import JobCreate, JobUpdate
 
-router=APIRouter(prefix="/job",tags=["job"])
-jobs=[]
+router = APIRouter(
+    prefix="/job",
+    tags=["job"]
+)
 
-@router.post("/")
+jobs = []
+
+
+# Create Job
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create_job(job: JobCreate):
     jobs.append(job)
     return job
 
-@router.get("/")
+
+# Get All Jobs
+@router.get("/", status_code=status.HTTP_200_OK)
 def get_all_job():
     return jobs
 
-@router.get("/:{job_id}")
+
+# Get Job by ID
+@router.get("/{job_id}", status_code=status.HTTP_200_OK)
 def get_job(job_id: int):
+    if job_id >= len(jobs):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found"
+        )
     return jobs[job_id]
 
-@router.get("/")
-def read_job():
-    return{"Job": "Job root"}
 
-@router.get("/{job_id}")
-def read_Job(job: int):
-    return {"Job_id": "job_id"}
-
-@router.put("/{job_id}")
+# Update Job
+@router.put("/{job_id}", status_code=status.HTTP_200_OK)
 def update_job(job_id: int, job: JobUpdate):
-    jobs[job_id]=job
-    return jobs 
+    if job_id >= len(jobs):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found"
+        )
 
-@router.delete("/{job_id}")
+    jobs[job_id] = job
+    return jobs[job_id]
+
+
+# Delete Job
+@router.delete("/{job_id}", status_code=status.HTTP_200_OK)
 def delete_job(job_id: int):
-    jobs.pop(job_id)
-    return jobs
+    if job_id >= len(jobs):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found"
+        )
 
+    deleted_job = jobs.pop(job_id)
+
+    return {
+        "message": "Job deleted successfully",
+        "job": deleted_job
+    }
